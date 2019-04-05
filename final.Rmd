@@ -1,0 +1,187 @@
+---
+title: "Enos 2016: Replication and Extension"
+output:
+ pdf_document:
+  md_extension: +raw_tex
+# bibliography: citations.bib
+---
+
+```{r setup, include=FALSE}
+
+# Replication of "What the Demolition of Public Housing Teaches Us about the Impact of Racial Threat on Political Behavior"
+# Published in American Journal of Political Science (2015)
+# Original author: Ryan D. Enos
+
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(stargazer)
+library(stringr)
+library(extrafont)
+library(apsrtable)
+```
+
+\begin{flushright}
+Gabe Walker
+
+April 10, 2019
+\end{flushright}
+
+## Abstract
+
+Abstract goes here.
+
+```{r data, echo=FALSE, message=FALSE, error=FALSE}
+
+# First download the replication file provided on the Harvard Dataverse:
+# https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/26612
+
+# Load data.
+
+wtreat <- read.csv("dataverse_files/white.treat.effect.mean.boot.csv")
+wtreat.lower <- read.csv("dataverse_files/white.treat.effect.conf.boot.lower.csv")
+wtreat.upper <- read.csv("dataverse_files/white.treat.effect.conf.boot.upper.csv")
+Nwtreat <- read.csv("dataverse_files/white.treat.N.csv")
+btreat <- read.csv("dataverse_files/black.treat.effect.mean.boot.csv")
+btreat.lower <- read.csv("dataverse_files/black.treat.effect.conf.boot.lower.csv")
+btreat.upper <- read.csv("dataverse_files/black.treat.effect.conf.boot.upper.csv")
+Nbtreat <- read.csv("dataverse_files/black.treat.N.csv")
+
+# Letters for marking graphs. One is not used.
+
+use.letters <- c("a", "b", "c", "d", "e", "f", "skip", "g", "h")
+
+# Cycle through each line of data, each of which are groups defined by diferent namepcts.
+# Turning into matrices helps below with segment function
+
+for (i in 1:nrow(wtreat)) {
+  use.wtreat <- as.matrix(wtreat[i, ])
+  use.wlower <- as.matrix(wtreat.lower[i, ])
+  use.wupper <- as.matrix(wtreat.upper[i, ])
+  use.Nwtreat <- as.matrix(Nwtreat[i, ])
+
+  use.btreat <- as.matrix(btreat[i, ])
+  use.blower <- as.matrix(btreat.lower[i, ])
+  use.bupper <- as.matrix(btreat.upper[i, ])
+  use.Nbtreat <- as.matrix(Nbtreat[i, ])
+}
+```
+
+```{r graphics, echo=FALSE, message=FALSE, error=FALSE}
+
+# Master parameters for graphics
+
+ylims <- c(-.35, .1)
+ylims.2 <- c(-.45, .1)
+xlims <- c(.5, 11)
+dists <- seq(from = 1000, to = 100, by = -100) ### DELETE THIS LATER
+xs <- seq(1:length(dists))
+ys <- seq(from = -.35, to = .1, by = .05)
+ys.lab <- c("-0.35", "-0.30", "-0.25", "-0.20", "-0.15", "-0.10", "-0.05", "0.00", "0.05", "0.10")
+ys.2 <- seq(from = -.45, to = .1, by = .05)
+ys.lab.2 <- c("-0.45", "-0.40", "-0.35", "-0.30", "-0.25", "-0.20", "-0.15", "-0.10", "-0.05", "0.00", "0.05", "0.10")
+
+offsets <- .15
+text.offsets <- .025
+cex.axis <- .9
+cex.N <- .7
+top.text.adj <- c(1.3, 1.3) ## Offsets on labels to reduce crowding
+bottom.text.adj <- c(-.15, -.85)
+point.size <- 2
+line.offset <- .0175
+```
+
+## Figure 1 Treatment Effects
+
+```{r fig1, echo=FALSE, message=FALSE, error=FALSE}
+
+# Set the graphical parameters.
+
+par(las = 1)
+par(mar = c(5.1, 4.1, .5, .5))
+plot(xs, use.wtreat,
+  ylim = ylims,
+  xlim = xlims,
+  type = "n",
+  ylab = "Treatment Effect",
+  xlab = "Treated Group Distance from Projects",
+  xaxt = "n",
+  yaxt = "n.csv"
+)
+abline(h = 0, lty = 2)
+
+# Draw the error bars first.
+
+segments(
+  x0 = xs[1:2] + offsets, x1 = xs[1:2] + offsets, ## only do it for low N blacks because otherwise lines look funny
+  y0 = use.btreat[, 1:2], y1 = use.blower[, 1:2]
+)
+segments(
+  x0 = xs[1:2] + offsets, x1 = xs[1:2] + offsets,
+  y0 = use.btreat[, 1:2] + line.offset, y1 = use.bupper[, 1:2]
+)
+## now the others
+segments(
+  x0 = xs[3:10] + offsets, x1 = xs[3:10] + offsets,
+  y0 = use.blower[, 3:10], y1 = use.bupper[, 3:10]
+)
+
+segments(
+  x0 = xs - offsets, x1 = xs - offsets, ## bottomlines
+  y0 = use.wtreat - line.offset, y1 = use.wlower
+)
+segments(
+  x0 = xs - offsets, x1 = xs - offsets, ## toplines
+  y0 = use.wtreat, y1 = use.wupper
+)
+
+# Lay down the points and add text equal to the sample size.
+
+points(xs - offsets, use.wtreat,
+  cex = point.size,
+  pch = 21,
+  bg = "white",
+  col = "black"
+)
+text(xs - offsets, use.wtreat,
+  paste("(", use.Nwtreat, ")", sep = ""),
+  cex = cex.N,
+  # adj = top.text.adj
+  pos = 1
+)
+
+points(xs + offsets, use.btreat,
+  pch = 16,
+  cex = point.size
+)
+text(xs + offsets, use.btreat,
+  paste("(", use.Nbtreat, ")", sep = ""),
+  cex = cex.N,
+  # adj = bottom.text.adj
+  pos = 3
+)
+
+# Label the axes.
+
+axis(
+  side = 1,
+  at = xs,
+  label = seq(100, 1000, 100),
+  cex.axis = cex.axis
+)
+axis(
+  side = 2,
+  at = ys,
+  label = ys.lab,
+  cex.axis = cex.axis
+)
+```
+
+***
+
+*Note*: Difference-in-differences results for treatment groups defined by increasing distance from
+the demolished projects. Differences are for the mean turnout in 2004 minus the mean turnout
+in 2000 for the treatment group minus the same difference for the control group. White circles
+represent the mean effect on white voters; black circles represent the mean effect on black voters.
+The N in each treatment group is in parentheses next to the mean effect. Vertical lines represent
+the 95% confidence intervals generated by bootstrapped standard errors of the difference between
+treatment and control.
