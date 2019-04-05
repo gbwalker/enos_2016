@@ -3,7 +3,7 @@ title: "Enos 2016: Replication and Extension"
 output:
  pdf_document:
   md_extension: +raw_tex
-# bibliography: citations.bib
+bibliography: citations.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -28,7 +28,14 @@ April 10, 2019
 
 ## Abstract
 
-Abstract goes here.
+# What the Demolition of Public Housing Teaches Us about the Impact of Racial Threat on Political Behavior
+I replicate the figures in @enos, "[What the Demolition of Public Housing Teaches Us about the Impact of Racial Threat on Political Behavior](https://scholar.harvard.edu/files/renos/files/enoschicago.pdf)," the data for which can be found on the [Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/26612) [@enos_data].
+
+The figures appear exactly as in the original. They show the "treatment" effect of the quasi-experimental demolishing of housing projects in Chicago on the voting behavior of the nearby white population. Overall, the figures underscore the paper's argument that white individuals living closer to the projects, or those living in an area where most of the neighborhood's black population was living in a demolished project, voted less after the projects came down. Enos argues that this is empirical evidence for the "racial threat" hypothesis.
+
+The extension, once completed, will test the results of the paper or present them in a novel way.
+
+\pagebreak
 
 ```{r data, echo=FALSE, message=FALSE, error=FALSE}
 
@@ -755,3 +762,7 @@ for (i in graphs) {
 ***
 
 *Note*: Differences in weighted mean Obama vote for precincts with *d* $\leq$ 1,000 for demolished projects and matched precincts with *d* $\leq$ 1,000 for nondemolished projects for white voters (white circles) and black voters (black circles).
+
+\pagebreak
+
+## References
