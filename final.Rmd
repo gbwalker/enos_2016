@@ -14,11 +14,14 @@ bibliography: citations.bib
 
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-library(stargazer)
 library(stringr)
 library(extrafont)
+library(stargazer)
 library(apsrtable)
 library(Zelig)
+library(simpleboot)
+library(boot)
+library(viridis)
 ```
 
 \begin{flushright}
@@ -30,11 +33,13 @@ April 10, 2019
 # Abstract
 
 ## What the Demolition of Public Housing Teaches Us about the Impact of Racial Threat on Political Behavior
-I replicate the figures in @enos, "[What the Demolition of Public Housing Teaches Us about the Impact of Racial Threat on Political Behavior](https://scholar.harvard.edu/files/renos/files/enoschicago.pdf)," the data for which can be found on the [Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/26612) [@enos_data].
+I replicate the figures in @enos, "[What the Demolition of Public Housing Teaches Us about the Impact of Racial Threat on Political Behavior](https://scholar.harvard.edu/files/renos/files/enoschicago.pdf)," the data for which can be found on the [Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/26612) [@enos_data].[^1]
 
 The figures appear exactly as in the original. They show the "treatment" effect of the quasi-experimental demolishing of housing projects in Chicago on the voting behavior of the nearby white population. Overall, the figures underscore the paper's argument that white individuals living closer to the projects, or those living in an area where most of the neighborhood's black population was living in a demolished project, voted less after the projects came down. Enos argues that this is empirical evidence for the "racial threat" hypothesis.
 
-The extension, once completed, will test the results of the paper or present them in a novel way.
+The extension attempts to depict the key finding of the paper in a more visually compelling way. Using the mean treatment effects for four different categories of individuals, I illustrate that the white treatment groups show decreased voting turnout at closer distances than black treatment groups.
+
+[^1]: Note that to knit this document, you must change your working directory in line 785 of the code to read in the large CSV file of main results.
 
 \pagebreak
 
@@ -766,7 +771,7 @@ for (i in graphs) {
 
 \pagebreak
 
-```{r turnout, echo=FALSE, message=FALSE, error=FALSE, cache=TRUE}
+```{r turnout, echo=FALSE, cache=TRUE, warning=FALSE, error=FALSE, message=FALSE, results='hide'}
 
 ### Estimate the voter turnout from the replication file "turnout.r".
 
@@ -775,6 +780,7 @@ for (i in graphs) {
 ptm <- proc.time()
 
 # Set the working directory to the desktop, where you should save data.turnout.csv.
+# NOTE: this should be changed based on where the file is on your computer.
 
 setwd("C:/Users/Gabriel/Desktop")
 
@@ -840,25 +846,25 @@ for(j in 1:length(namepcts)){
 # For white and black subjects, perform t test of differences of means with boostrapped standard errors.
 
 # Leave out the bootstrapping for now to save time.
-#       	
-# 		if(white.treat.N[j,h] > 0){
-# 			white.boot <- two.boot((Wtreat$vote2004-Wtreat$vote2000),(Wcont$vote2004-Wcont$vote2000), mean, R = 1000, na.rm=T)
-# 			white.treat.effect.mean.boot[j,h] <- white.boot$t0
-# 			white.boot.ci <- boot.ci(white.boot, type = 'basic')
-# 			white.treat.effect.conf.boot.lower[j,h] <- white.boot.ci$basic[4]
-# 			white.treat.effect.conf.boot.upper[j,h] <- white.boot.ci$basic[5]
-# 		      		}
-# 		      		
-# 		if(black.treat.N[j,h] > 0){
-# 			black.boot <- two.boot((Btreat$vote2004-Btreat$vote2000),(Bcont$vote2004-Bcont$vote2000),mean, R = 1000, na.rm=T)
-# 			black.treat.effect.mean.boot[j,h] <- black.boot$t0
-# 			black.boot.ci <- boot.ci(black.boot, type = 'basic')
-# 			black.treat.effect.conf.boot.lower[j,h] <- black.boot.ci$basic[4]
-# 			black.treat.effect.conf.boot.upper[j,h] <- black.boot.ci$basic[5]		
-# 			 }
+
+		if(white.treat.N[j,h] > 0){
+			white.boot <- two.boot((Wtreat$vote2004-Wtreat$vote2000),(Wcont$vote2004-Wcont$vote2000), mean, R = 2, na.rm=T)
+			white.treat.effect.mean.boot[j,h] <- white.boot$t0
+			white.boot.ci <- boot.ci(white.boot, type = 'basic')
+			white.treat.effect.conf.boot.lower[j,h] <- white.boot.ci$basic[4]
+			white.treat.effect.conf.boot.upper[j,h] <- white.boot.ci$basic[5]
+		      		}
+
+		if(black.treat.N[j,h] > 0){
+			black.boot <- two.boot((Btreat$vote2004-Btreat$vote2000),(Bcont$vote2004-Bcont$vote2000),mean, R = 2, na.rm=T)
+			black.treat.effect.mean.boot[j,h] <- black.boot$t0
+			black.boot.ci <- boot.ci(black.boot, type = 'basic')
+			black.treat.effect.conf.boot.lower[j,h] <- black.boot.ci$basic[4]
+			black.treat.effect.conf.boot.upper[j,h] <- black.boot.ci$basic[5]
 			 }
+		}
 	}
-		
+
 # Print the elapsed time.
 
 time.elapsed <- proc.time() - ptm
@@ -867,7 +873,7 @@ time.elapsed <- proc.time() - ptm
 ```
 
 
-```{r simulation, echo=FALSE, cache=TRUE}
+```{r simulation, echo=FALSE, cache=TRUE, warning=FALSE, error=FALSE, message=FALSE, results='hide'}
 
 ### Create predicted effects for distance and context changes.
 
@@ -941,9 +947,11 @@ time.elapsed <- proc.time() - ptm  # End time.
 # cat(paste('total elapsed time:', time.elapsed[3],'\n \n',sep = ' '))
 ```
 
+\pagebreak
+
 # Table 1 Regression of Turnout on Distance and Population Size
 
-```{r table1, echo=FALSE, message=FALSE, error=FALSE, results='asis', fig.align='center'}
+```{r table1, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE, results='asis', fig.align='center'}
 
 ### Table 1.
 
@@ -951,10 +959,12 @@ time.elapsed <- proc.time() - ptm  # End time.
 
 out.reg2 <- lm(vote2004 ~ log(demo.distance) + log(context_black) + vote2000, data = usedata)
 
-apsrtable(out.reg2,
-	coef.names = c( 'Intercept','log(distance)','log(percent of local black population)','2000 turnout'),
-	digits = 3
-	)
+stargazer(out.reg2, header = FALSE, style = "ajps", title = "Regression of Turnout on Distance and Population Size")
+
+# apsrtable(out.reg2,
+# 	coef.names = c( 'Intercept','log(distance)','log(percent of local black population)','2000 turnout'),
+# 	digits = 3
+# 	)
 ```
 
 *Notes*: OLS regression of 2004 voter turnout on listed variables for white voters. The local African American population is represented by the total number of African Americans within 1 kilometer of the project. The population of the housing projects is represented by the African American population of the census blocks containing the projects. The percent of the local African American population living in the demolished projects is these two quantities expressed as a proportion. Standard errors are listed in parentheses. All coefficients are significant at p < .0001.
@@ -963,6 +973,84 @@ apsrtable(out.reg2,
 
 # Extension
 
+This extension attempts to depict the key finding of the paper in a more visually compelling way. Using the mean treatment effects for four different categories of individuals, I illustrate that the white treatment groups show decreased voting turnout at closer distances than black treatment groups.
+
+The four categories are:
+
+* Black individuals (with 91 percent confidence, based on Enos's replication data)
+* Black individuals (with 99 percent confidence)
+* White individuals (91)
+* White individuals (99)
+
+Note that yellow in the charts below represents higher density.
+
+```{r extension, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
+
+### Extension: 
+
+# Save the results of the mean treatment effect for blacks and whites
+# at all distances at different confidence levels of accuracy for
+# their race (91 and 99 percent, respectively).
+
+b91 <- black.treat.effect.mean.boot[1, ]
+b99 <- black.treat.effect.mean.boot[8, ]
+w91 <- white.treat.effect.mean.boot[1, ]
+w99 <- white.treat.effect.mean.boot[8, ]
+
+# Create a tibble to store all the results in a tidy format.
+# distance is distance from the demolition.
+# race is predicted race.
+# confidence is (probably) estimated confidence for racial category.
+# effect is the predicted mean treatment effect.
+
+results <- tibble(distance = rep(seq(100, 1000, by = 100), 4),
+                  race = c(rep("black", 20), rep("white", 20)),
+                  confidence = c(rep(91, 10), rep(99, 10), rep(91, 10), rep(99, 10)),
+                  effect = c(b91, b99, w91, w99))
+
+```
+
+```{r p1, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE, fig.dim=c(5,5), fig.align='center'}
+# Make contour plots for each of the four categories.
+
+results %>% 
+  filter(race == "black" & confidence == 91) %>% 
+  ggplot(aes(distance, effect)) +
+  stat_density_2d(aes(fill = ..level..), geom = "polygon") +
+  scale_fill_viridis() +
+  theme(panel.background = element_blank(), legend.position="none") +
+  labs(x = "Distance (m)", y = "Treatment effect (p.p. voting change)", title = "Black residents decrease turnout at higher distances.", subtitle = "Black with 99 percent confidence.")
+```
+
+```{r p2, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE, fig.dim=c(5,5), fig.align='center'}
+results %>% 
+  filter(race == "black" & confidence == 99) %>% 
+  ggplot(aes(distance, effect)) +
+  stat_density_2d(aes(fill = ..level..), geom = "polygon") +
+  scale_fill_viridis() +
+  theme(panel.background = element_blank(), legend.position="none") +
+  labs(x = "Distance (m)", y = "Treatment effect (p.p. voting change)", title = "Black residents decrease turnout at higher distances.", subtitle = "Black with 99 percent confidence.")
+```
+
+```{r p3, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE, fig.dim=c(5,5), fig.align='center'}
+results %>% 
+  filter(race == "white" & confidence == 91) %>% 
+  ggplot(aes(distance, effect)) +
+  stat_density_2d(aes(fill = ..level..), geom = "polygon") +
+  scale_fill_viridis() +
+  theme(panel.background = element_blank(), legend.position="none") +
+  labs(x = "Distance (m)", y = "Treatment effect (p.p. voting change)", title = "White residents decrease turnout at closer distances.", subtitle = "White with 91 percent confidence.")
+```
+
+```{r p4, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE, fig.dim=c(5,5), fig.align='center'}
+results %>% 
+  filter(race == "white" & confidence == 99) %>% 
+  ggplot(aes(distance, effect)) +
+  stat_density_2d(aes(fill = ..level..), geom = "polygon") +
+  scale_fill_viridis() +
+  theme(panel.background = element_blank(), legend.position="none") +
+  labs(x = "Distance (m)", y = "Treatment effect (p.p. voting change)", title = "White residents decrease turnout at closer distances.", subtitle = "White with 99 percent confidence.")
+```
 
 \pagebreak
 
